@@ -2,10 +2,18 @@ package com.stackroute.keepnote.jwtfilter;
 
 
 import org.springframework.web.filter.GenericFilterBean;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 
@@ -33,10 +41,30 @@ public class JwtFilter extends GenericFilterBean {
 	
 	
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest req, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    	final HttpServletRequest request = (HttpServletRequest) req;
 
-       
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer")) {
+            throw new ServletException("Missing or invalid Authorization header.");
+        }
 
+        final String compactJws = authHeader.substring(7); // The part after "Bearer "
 
+        try {
+            Claims claims = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(compactJws).getBody();
+            logger.info("claims :: "+claims);
+            logger.info("claims.getSubject() :: "+claims.getSubject());
+            request.getSession().setAttribute("loggedInUserId", claims.getSubject());
+            request.setAttribute("claims", claims);
+        }
+        catch (SignatureException e) {
+            throw new ServletException("Invalid token.");
+        }catch(MalformedJwtException jwtException)
+        {
+        	throw new ServletException("JWT is malformed.");
+        }
+
+        chain.doFilter(request, response);
     }
 }
