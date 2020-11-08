@@ -1,5 +1,6 @@
 package com.stackroute.keepnote.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -13,15 +14,14 @@ import com.stackroute.keepnote.model.Category;
 import com.stackroute.keepnote.repository.CategoryRepository;
 
 /*
- * Service classes are used here to implement additional business logic/validation 
- * This class has to be annotated with @Service annotation.
- * @Service - It is a specialization of the component annotation. It doesn't currently 
- * provide any additional behavior over the @Component annotation, but it's a good idea 
- * to use @Service over @Component in service-layer classes because it specifies intent 
- * better. Additionally, tool support and additional behavior might rely on it in the 
- * future.
- * */
-
+* Service classes are used here to implement additional business logic/validation 
+* This class has to be annotated with @Service annotation.
+* @Service - It is a specialization of the component annotation. It doesn't currently 
+* provide any additional behavior over the @Component annotation, but it's a good idea 
+* to use @Service over @Component in service-layer classes because it specifies intent 
+* better. Additionally, tool support and additional behavior might rely on it in the 
+* future.
+* */
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
@@ -30,26 +30,22 @@ public class CategoryServiceImpl implements CategoryService {
 	 * Constructor-based autowiring) Please note that we should not create any
 	 * object using the new keyword.
 	 */
-	private CategoryRepository categoryRepository;
-
 	@Autowired
-	public CategoryServiceImpl(CategoryRepository categoryRepository)
-	{
-		this.categoryRepository = categoryRepository;
+	CategoryRepository repository;
+
+	public CategoryServiceImpl(CategoryRepository repository) {
+		this.repository = repository;
 	}
+
 	/*
 	 * This method should be used to save a new category.Call the corresponding
 	 * method of Respository interface.
 	 */
 	public Category createCategory(Category category) throws CategoryNotCreatedException {
-
-		Category categoryCreated =  categoryRepository.insert(category);
-
-		if(categoryCreated!=null)
-		{
-			return categoryCreated;
-		}
-		throw new CategoryNotCreatedException("CategoryNotCreatedException");
+		Category cat = repository.insert(category);
+		if (cat == null)
+			throw new CategoryNotCreatedException("category not created");
+		return cat;
 	}
 
 	/*
@@ -57,25 +53,26 @@ public class CategoryServiceImpl implements CategoryService {
 	 * corresponding method of Respository interface.
 	 */
 	public boolean deleteCategory(String categoryId) throws CategoryDoesNoteExistsException {
-
-		try 
-		{
-			categoryRepository.deleteById(categoryId);
-			return true;
-		} catch (Exception e) 
-		{
-			throw new CategoryDoesNoteExistsException("category doesnot exist");
+		if (!repository.findById(categoryId).isPresent()) {
+			throw new CategoryDoesNoteExistsException("Category does not exist");
 		}
+		repository.deleteById(categoryId);
+		return Boolean.TRUE;
 	}
+
 
 	/*
 	 * This method should be used to update a existing category.Call the
 	 * corresponding method of Respository interface.
 	 */
 	public Category updateCategory(Category category, String categoryId) {
-
-		categoryRepository.save(category);
-		return categoryRepository.findById(categoryId).get();
+		Category fetchedCategory = repository.findById(categoryId).get();
+		fetchedCategory.setCategoryName(category.getCategoryName());
+		fetchedCategory.setCategoryDescription(category.getCategoryDescription());
+		fetchedCategory.setCategoryCreatedBy(category.getCategoryCreatedBy());
+		fetchedCategory.setCategoryCreationDate(new Date());
+		repository.save(fetchedCategory);
+		return fetchedCategory;
 	}
 
 	/*
@@ -83,20 +80,12 @@ public class CategoryServiceImpl implements CategoryService {
 	 * corresponding method of Respository interface.
 	 */
 	public Category getCategoryById(String categoryId) throws CategoryNotFoundException {
-		Category category = null;
 		try {
-			category = categoryRepository.findById(categoryId).get();
-			if (category != null) {
-				return category;
-			} else {
-				throw new CategoryNotFoundException("CategoryNotFoundException");
-			}
+			return repository.findById(categoryId).get();
 		} catch (NoSuchElementException e) {
-			// TODO Auto-generated catch block
-			throw new CategoryNotFoundException("CategoryNotFoundException");
+			throw new CategoryNotFoundException("Category not found");
 		}
 
-		//return category;
 	}
 
 	/*
@@ -105,7 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
 	 */
 	public List<Category> getAllCategoryByUserId(String userId) {
 
-		return categoryRepository.findAllCategoryByCategoryCreatedBy(userId);
+		return repository.findAllCategoryByCategoryCreatedBy(userId);
 	}
 
 }

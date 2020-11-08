@@ -14,8 +14,6 @@ import com.stackroute.keepnote.jwtfilter.JwtFilter;
 
 @SpringBootApplication
 public class ReminderServiceApplication {
-
-	
 	
 	
 	/*
@@ -26,10 +24,10 @@ public class ReminderServiceApplication {
 	  @Bean
 	    public FilterRegistrationBean jwtFilter() {
 	       
-		  final FilterRegistrationBean registrationBean = new FilterRegistrationBean();
-	        registrationBean.setFilter(new JwtFilter());
-	        registrationBean.addUrlPatterns("/api/*");
-	        return registrationBean;
+		  	final FilterRegistrationBean<JwtFilter> registrationBean = new FilterRegistrationBean<>();
+			registrationBean.setFilter(new JwtFilter());
+			registrationBean.addUrlPatterns("/api/v1/*");
+			return registrationBean;
 	    }
 
 	

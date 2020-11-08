@@ -26,5 +26,4 @@ public interface UserAutheticationRepository extends JpaRepository<User, String>
     */
     
     User findByUserIdAndUserPassword(String userId, String userPassword);
-    
 }

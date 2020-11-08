@@ -18,7 +18,8 @@ public class NoteUser {
 	 * the getters and setters for the fields.
 	 */
 
-    @Id
+    
+	@Id
     private String userId;
     private List<Note> notes;
 
@@ -37,5 +38,13 @@ public class NoteUser {
 
     public void setNotes(List<Note> notes) {
         this.notes = notes;
+    }
+
+    @Override
+    public String toString() {
+        return "NoteUser{" +
+                "userId='" + userId + '\'' +
+                ", notes=" + notes +
+                '}';
     }
 }

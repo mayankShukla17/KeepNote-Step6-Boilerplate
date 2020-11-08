@@ -1,18 +1,18 @@
 package com.stackroute.keepnote.controller;
 
+
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.stackroute.keepnote.exception.UserAlreadyExistsException;
+import com.stackroute.keepnote.exception.UserNotFoundException;
 import com.stackroute.keepnote.model.User;
 import com.stackroute.keepnote.service.UserAuthenticationService;
 
@@ -28,6 +28,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
  * is equivalent to using @Controller and @ResposeBody annotation
  */
 @RestController
+@RequestMapping("/api/v1/auth")
 public class UserAuthenticationController {
 
     /*
@@ -35,13 +36,12 @@ public class UserAuthenticationController {
 	 * autowiring) Please note that we should not create an object using the new
 	 * keyword
 	 */
-	long EXPIRATION_TIME = 8000000000L;
-	
-	private Log log = LogFactory.getLog(getClass());
-	UserAuthenticationService authicationService;
-	
-    public UserAuthenticationController(UserAuthenticationService authicationService) {
-    	this.authicationService =authicationService;
+
+	@Autowired
+	UserAuthenticationService service;
+
+	public UserAuthenticationController(UserAuthenticationService authicationService) {
+		this.service = authicationService;
 	}
 
 /*
@@ -54,24 +54,15 @@ public class UserAuthenticationController {
 	 * 
 	 * This handler method should map to the URL "/api/v1/auth/register" using HTTP POST method
 	 */
-    @PostMapping("/api/v1/auth/register")
-	public ResponseEntity<?> createUser(@RequestBody User user) {
-		log.info("createUser : STARTED");
-		HttpHeaders headers = new HttpHeaders();
+	@PostMapping("/register")
+	public ResponseEntity<String> register(@RequestBody User user) {
 		try {
-			user.setUserAddedDate(new Date());
-			if(authicationService.saveUser(user))
-			{
-				return new ResponseEntity<>(headers, HttpStatus.CREATED);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResponseEntity<>(headers, HttpStatus.CONFLICT);
+			service.saveUser(user);
+			return new ResponseEntity<String>("Created", HttpStatus.CREATED);
+		} catch (UserAlreadyExistsException e) {
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.CONFLICT);
 		}
-		log.info("createUser : ENDED");
-		return new ResponseEntity<>(headers, HttpStatus.CREATED);
 	}
-
 
 
 	/* Define a handler method which will authenticate a user by reading the Serialized user
@@ -87,37 +78,24 @@ public class UserAuthenticationController {
 	 * This handler method should map to the URL "/api/v1/auth/login" using HTTP POST method
 	*/
 
-    @PostMapping("/api/v1/auth/login")
-   	public ResponseEntity<?> validateUser(@RequestBody User user) {
-   		log.info("validateUser : STARTED");
-   		Map<String, String> map = new HashMap<>();
-   		try {
-   			user.setUserAddedDate(new Date());
-   			if(authicationService.findByUserIdAndPassword(user.getUserId(), user.getUserPassword())!=null)
-   			{
-   				log.info("user authenticated : Generating token");
-   				String token = getToken(user.getUserId(), user.getUserPassword());
-   				map.clear();
-   				map.put("message", "user succesfully loggedin.");
-   				map.put("token", token);
-   				log.info("token : "+token);
-   				return new ResponseEntity<>(map, HttpStatus.OK);
-   			}
-   		} catch (Exception e) {
-   			e.printStackTrace();
-   			return new ResponseEntity<>(map, HttpStatus.CONFLICT);
-   		}
-   		log.info("validateUser : ENDED");
-   		return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
-   	}
+	@PostMapping("/login")
+	public ResponseEntity<String> login(@RequestBody User user) {
+		try {
+			service.findByUserIdAndPassword(user.getUserId(), user.getUserPassword());
+			return new ResponseEntity<String>(getToken(user.getUserId(), user.getUserPassword()), HttpStatus.OK);
+		} catch (UserNotFoundException e) {
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+		} catch (Exception e) {
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+		}
+	}
 
-// Generate JWT token
-	public String getToken(String username, String password) throws Exception {
-      //Builds the JWT and serializes it to a compact, URL-safe string
-	  return Jwts.builder().setSubject(username).
-			  					setIssuedAt(new Date()).
-			  						setExpiration(new Date(System.currentTimeMillis()+EXPIRATION_TIME))
-			  							.signWith(SignatureAlgorithm.HS256, "secretkey").compact();
-}
+	// Generate JWT token
+	public String getToken(String userId, String password) throws Exception {
+		return Jwts.builder().setId(userId).setSubject(password).setIssuedAt(new Date())
+				.signWith(SignatureAlgorithm.HS256, "secretkey").compact();
+
+	}
+
 
 }

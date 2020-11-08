@@ -5,14 +5,13 @@ import org.springframework.web.filter.GenericFilterBean;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
@@ -22,13 +21,7 @@ import java.io.IOException;
  * Override the doFilter method with ServletRequest, ServletResponse and FilterChain.
  * This is used to authorize the API access for the application.
  */
-
-
 public class JwtFilter extends GenericFilterBean {
-
-	
-	
-	
 
 	/*
 	 * Override the doFilter method of GenericFilterBean.
@@ -39,33 +32,25 @@ public class JwtFilter extends GenericFilterBean {
      * Set the request attribute with the retrieved claims
      * Call FilterChain object's doFilter() method */
 	
-	
     @Override
-    public void doFilter(ServletRequest req, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-    	final HttpServletRequest request = (HttpServletRequest) req;
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer")) {
-            throw new ServletException("Missing or invalid Authorization header.");
-        }
+    	HttpServletRequest req = (HttpServletRequest) request;
+		HttpServletResponse res = (HttpServletResponse) response;
+		final String authHeader = req.getHeader("authorization");
+		if ("OPTIONS".equals(req.getMethod())) {
+			res.setStatus(HttpServletResponse.SC_OK);
+			chain.doFilter(req, res);
+		} else {
+			if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+				throw new ServletException("Missing or invalid Authorization header");
+			}
+			final String token = authHeader.substring(7);
+			final Claims claims = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token).getBody();
+			request.setAttribute("claims", claims);
+			chain.doFilter(req, res);
+		}
 
-        final String compactJws = authHeader.substring(7); // The part after "Bearer "
 
-        try {
-            Claims claims = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(compactJws).getBody();
-            request.setAttribute("claims", claims);
-            logger.info("claims :: "+claims);
-            logger.info("claims.getSubject() :: "+claims.getSubject());
-            request.getSession().setAttribute("loggedInUserId", claims.getSubject());
-          
-        }
-        catch (SignatureException e) {
-            throw new ServletException("Invalid token.");
-        }catch(MalformedJwtException jwtException)
-        {
-        	throw new ServletException("JWT is malformed.");
-        }
-
-        chain.doFilter(request, response);
     }
 }

@@ -1,45 +1,44 @@
 package com.stackroute.keepnote.aspectj;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.aspectj.lang.JoinPoint;
+import java.util.Date;
+
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
-import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /* Annotate this class with @Aspect and @Component */
 
-@Aspect
-@Component
 public class LoggingAspect {
 	/*
 	 * Write loggers for each of the methods of Note controller, any particular method
 	 * will have all the four aspectJ annotation
 	 * (@Before, @After, @AfterReturning, @AfterThrowing).
 	 */
-	private Log log = LogFactory.getLog(getClass());
 	
-	 @Before("execution(* com.stackroute.keepnote.controller.NoteController.*(..))")
-	    public void logBefore(JoinPoint point) {
-	        log.info(point.getSignature().getName() + " before called...");
-	    }
-	 
-	 @After("execution(* com.stackroute.keepnote.controller.NoteController.*(..))")
-	    public void logAfter(JoinPoint point) {
-	        log.info(point.getSignature().getName() + " after called...");
-	    }
-	 
-	 @AfterReturning("execution(* com.stackroute.keepnote.controller.NoteController.*(..))")
-	    public void logAfterReturning(JoinPoint point) {
-	        log.info(point.getSignature().getName() + " after returning called...");
-	    }
-	 
-	 @AfterThrowing("execution(* com.stackroute.keepnote.controller.NoteController.*(..))")
-	    public void afterThrowing(JoinPoint point) {
-	        log.info(point.getSignature().getName() + " afterThrowing called...");
-	      
-	    }
+	private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
+
+	@Before("execution(com.stackroute.keepnote.controller.*)")
+	public void logBefore() {
+		logger.debug("@Before: {}" , new Date());
+	}
+
+	@After("execution(com.stackroute.keepnote.controller.*)")
+	public void logAfter() {
+		logger.debug("@After: {}" , new Date());
+	}
+
+	@AfterThrowing(pointcut = "execution(com.stackroute.keepnote.controller.*)", throwing = "exception")
+	public void logAfterThrowing(Exception exception) {
+		logger.debug("@AfterReturning: {}" , new Date());
+		logger.debug("Exception caught: {}" , exception.getMessage());
+	}
+
+	@AfterReturning(pointcut = "execution(com.stackroute.keepnote.controller.*)", returning = "val")
+	public void logAfterReturning(Object val) {
+		logger.debug("Method return value: {}" , val);
+		logger.debug("@AfterReturning: {}" ,new Date());
+	}
 }

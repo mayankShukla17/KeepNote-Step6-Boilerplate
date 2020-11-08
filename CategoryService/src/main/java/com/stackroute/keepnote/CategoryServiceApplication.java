@@ -15,30 +15,24 @@ import com.stackroute.keepnote.jwtfilter.JwtFilter;
 @SpringBootApplication
 public class CategoryServiceApplication {
 
-	
-	
-
 	/*
 	 * Define the bean for Filter registration. Create a new FilterRegistrationBean
 	 * object and use setFilter() method to set new instance of JwtFilter object.
 	 * Also specifies the Url patterns for registration bean.
 	 */
 	@Bean
-	public FilterRegistrationBean jwtFilter() {
-		 final FilterRegistrationBean registrationBean = new FilterRegistrationBean();
-	        registrationBean.setFilter(new JwtFilter());
-	        registrationBean.addUrlPatterns("/api/*");
-	        return registrationBean;
+	public FilterRegistrationBean<JwtFilter> jwtFilter() {
+		final FilterRegistrationBean<JwtFilter> registrationBean = new FilterRegistrationBean<>();
+		registrationBean.setFilter(new JwtFilter());
+		registrationBean.addUrlPatterns("/api/v1/*");
+		return registrationBean;
 	}
-	
-	
 	
 	/*
 	 * 
 	 * You need to run SpringApplication.run, because this method start whole spring
 	 * framework. Code below integrates your main() with SpringBoot
 	 */
-
 	public static void main(String[] args) {
 		SpringApplication.run(CategoryServiceApplication.class, args);
 	}

@@ -5,19 +5,19 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 @Document
 public class Note {
-
+	
 	/*
 	 * This class should have eight fields
 	 * (noteId,noteTitle,noteContent,noteStatus,createdAt,
-	 * category,reminder,createdBy). This class should also contain the getters and
-	 * setters for the fields along with the no-arg , parameterized constructor and
-	 * toString method. The value of createdAt should not be accepted from the user
-	 * but should be always initialized with the system date.
+	 * category,reminder,createdBy). This class should also contain the
+	 * getters and setters for the fields along with the no-arg , parameterized
+	 * constructor and toString method. The value of createdAt should not be
+	 * accepted from the user but should be always initialized with the system date.
 	 * 
 	 */
+
 	@Id
 	private int noteId;
 	private String noteTitle;
@@ -27,6 +27,8 @@ public class Note {
 	private String noteCreatedBy;
 	private Category category;
 	private List<Reminder> reminders;
+
+	// getters & setters
 
 	public int getNoteId() {
 		return noteId;
@@ -68,6 +70,14 @@ public class Note {
 		this.noteCreationDate = noteCreationDate;
 	}
 
+	public String getNoteCreatedBy() {
+		return noteCreatedBy;
+	}
+
+	public void setNoteCreatedBy(String noteCreatedBy) {
+		this.noteCreatedBy = noteCreatedBy;
+	}
+
 	public Category getCategory() {
 		return category;
 	}
@@ -84,12 +94,13 @@ public class Note {
 		this.reminders = reminders;
 	}
 
-	public String getNoteCreatedBy() {
-		return noteCreatedBy;
+	@Override
+	public String toString() {
+		return "Note{" + "noteId=" + noteId + ", noteTitle='" + noteTitle + '\'' + ", noteContent='" + noteContent
+				+ '\'' + ", noteStatus='" + noteStatus + '\'' + ", noteCreationDate=" + noteCreationDate
+				+ ", noteCreatedBy='" + noteCreatedBy + '\'' + ", category=" + category + ", reminders=" + reminders
+				+ '}';
 	}
-
-	public void setNoteCreatedBy(String noteCreatedBy) {
-		this.noteCreatedBy = noteCreatedBy;
-	}
-
 }
+
+

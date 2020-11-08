@@ -21,6 +21,7 @@ public class User {
 	 * method.The value of userAddedDate should not be accepted from the user but
 	 * should be always initialized with the system date.
 	 */
+	
 	@Id
 	private String userId;
 	private String userName;
@@ -29,15 +30,18 @@ public class User {
 	private Date userAddedDate;
 	
 	public User() {
+		super();
 	}
-	public User(String string, String string1, String string2, String string3, Date date) {
-		this.userId = string;
-		this.userName =  string1;
-		this.userPassword = string2;
-		this.userMobile = string3;
-		this.userAddedDate = date;
-		
+	
+	public User(String userId, String userName, String userPassword, String userMobile, Date userAddedDate) {
+		super();
+		this.userId = userId;
+		this.userName = userName;
+		this.userPassword = userPassword;
+		this.userMobile = userMobile;
+		this.userAddedDate = userAddedDate;
 	}
+	
 	public String getUserId() {
 		return userId;
 	}
@@ -68,7 +72,10 @@ public class User {
 	public void setUserAddedDate(Date userAddedDate) {
 		this.userAddedDate = userAddedDate;
 	}
-	
-
+	@Override
+	public String toString() {
+		return "User [userId=" + userId + ", userName=" + userName + ", userPassword=" + userPassword + ", userMobile="
+				+ userMobile + ", userAddedDate=" + userAddedDate + "]";
+	}
 	 
 }
